@@ -1,0 +1,21 @@
+{
+	"logs": {
+		"enabled":"true",
+		"directory":"logs"
+	},
+	"betaseries": {
+		"login": "<YOUR_BETASERIES_LOGIN>",
+		"md5-password": "<YOUR_BETASERIES_PASSWORD_HASHED>",
+		"markAsDownloaded": "true"
+	},
+	"mappings": {	
+		"extant": {
+			"url": "extant",
+			"destinations": [
+				"<A_DIRECTORY_WHERE_TO_COPY_THE_FILE>,
+				"<ANOTHER_DIRECTORY_WHERE_TO_COPY_THE_FILE>",
+				"<YET_ANOTHER_DIRECTORY_WHICH_WILL_HAVE_A_SUBDIR_NAMED_AFTER_THE_TITLE>/#TITLE#",
+			]
+		}
+	}
+}
