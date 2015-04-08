@@ -1,4 +1,4 @@
-package com.slamdunk.seriesmanager.preferences;
+package com.slamdunk.seriesmanager.configuration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-public class MappingPreferences {
+public class MappingSettings {
 
 	public String showName;
 	public String betaseriesShowId;
@@ -16,7 +16,7 @@ public class MappingPreferences {
 	
 	public List<String> copyDestinations;
 	
-	public MappingPreferences() {
+	public MappingSettings() {
 		copyDestinations = new ArrayList<String>();
 	}
 	
@@ -30,7 +30,7 @@ public class MappingPreferences {
 		copyDestinations.clear();
 	}
 	
-	public void load(JSONObject jsonMapping, PropertiesPreferences properties) {
+	public void load(JSONObject jsonMapping, PropertiesSettings properties) {
 		load(jsonMapping, null, properties);
 	}
 	
@@ -40,7 +40,7 @@ public class MappingPreferences {
 	 * @param jsonMapping
 	 * @param properties 
 	 */
-	public void load(JSONObject jsonMapping, MappingPreferences defaultValues, PropertiesPreferences properties) {
+	public void load(JSONObject jsonMapping, MappingSettings defaultValues, PropertiesSettings properties) {
 		if (jsonMapping.has("show")) {
 			showName = jsonMapping.getString("show");
 		}
@@ -71,7 +71,7 @@ public class MappingPreferences {
 		}
 	}
 	
-	private void applyDefaults(MappingPreferences defaultMapping) {
+	private void applyDefaults(MappingSettings defaultMapping) {
 		if (includeFilter == null
 		&& defaultMapping.includeFilter != null) {
 			includeFilter = defaultMapping.includeFilter;
@@ -122,7 +122,7 @@ public class MappingPreferences {
 		// Vérification du filtre d'inclusion
 		
 		// Remplace les variables
-		String filter = includeFilter.replaceAll(Preferences.SHOW_VAR, showName).toLowerCase();
+		String filter = includeFilter.replaceAll(Settings.SHOW_VAR, showName).toLowerCase();
 		
 		// Vérification de la présence du filtre dans le titre
 		if (!showTitle.contains(filter)) {
@@ -132,7 +132,7 @@ public class MappingPreferences {
 		// Vérification du filtre d'exclusion
 		if (excludeFilter != null) {
 			// Remplace les variables
-			filter = excludeFilter.replaceAll(Preferences.SHOW_VAR, showName).toLowerCase();
+			filter = excludeFilter.replaceAll(Settings.SHOW_VAR, showName).toLowerCase();
 			
 			// Vérification de l'absence du filtre dans le titre
 	    	if (showTitle.contains(filter)) {

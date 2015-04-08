@@ -13,28 +13,41 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import com.slamdunk.seriesmanager.preferences.Preferences;
+import com.slamdunk.seriesmanager.configuration.Settings;
 public class SeriesManager {
-	private final String sourceFilename;
-	private final String sourceDirectory;
-	private final String preferencesFile;
+	private String homeDirectory;
+	private String sourceFilename;
+	private String sourceDirectory;
+	private boolean multiFilesDownload;
 	
-	private Preferences preferences;
+	private Settings preferences;
 	
-	public SeriesManager(String filename, String directory, String preferences) {
+	public SeriesManager(String home, String filename, String directory, boolean multi) {
 		Logger.add(INFO, "----------------------------------------------------------------------------");
 		Logger.add(INFO, new SimpleDateFormat("dd/MM/yyyy - hh:mm:ss").format(new Date()));
 		Logger.add(INFO, "Paramètres reçus :");
-		Logger.add(INFO, "\t\tFichier    : " + filename);
-		Logger.add(INFO, "\t\tRépertoire : " + directory);
+		Logger.add(INFO, "\t\tSeriesManager Home : " + home);
+		Logger.add(INFO, "\t\tFichier            : " + filename);
+		Logger.add(INFO, "\t\tRépertoire         : " + directory);
+		Logger.add(INFO, "\t\tMulti-fichiers     : " + multi);
 		
 		// Récupération des paramètres
+		homeDirectory = home;
 		sourceFilename = filename;
 		sourceDirectory = directory;
-		preferencesFile = preferences;
+		multiFilesDownload = multi;
 	}
 	
 	public boolean process() {
+		// Si on a un download multi-fichiers, alors on doit rechercher le nom du fichier
+		// vidéo dans le répertoire indiqué
+		if (multiFilesDownload) {
+			sourceFilename = FilenameParser.locateVideoFile(sourceDirectory);
+			if (sourceFilename == null) {
+				return false;
+			}
+		}
+		
 		// Extrait les infos sur la série à partir du nom du fichier à traiter
 		FilenameParser parser = new FilenameParser();
 		if (!parser.parse(sourceFilename)) {
@@ -42,8 +55,8 @@ public class SeriesManager {
 		}
 		
 		// Lecture des préférences générales et de celles pour ce show
-		preferences = new Preferences();
-		if (!preferences.load(preferencesFile, parser.title)) {
+		preferences = new Settings();
+		if (!preferences.load(homeDirectory, parser.title)) {
 			return false;
 		}
 		
@@ -65,7 +78,7 @@ public class SeriesManager {
 		
 		// Si les logs sont activées, on les écrit
 		if (preferences.logs.enabled) {
-			Path logFile = Paths.get(preferences.workingDirectory, preferences.logs.directory + preferences.mapping.showName + ".log");
+			Path logFile = Paths.get(homeDirectory, preferences.logs.directory, preferences.mapping.showName + ".log");
 			Logger.flushToFile(logFile);
 		}
 		return true;
@@ -101,7 +114,7 @@ public class SeriesManager {
 		Logger.add(INFO, "Copies ");
 		for (String destination : destinations) {
 			// Remplacement des variables
-			String extendedDestination = destination.replaceAll(Preferences.SHOW_VAR, preferences.mapping.showName);
+			String extendedDestination = destination.replaceAll(Settings.SHOW_VAR, preferences.mapping.showName);
 			
 			// Détermine le répertoire de destination
 			Path destinationFile = Paths.get(extendedDestination, sourceFilename);
@@ -127,19 +140,27 @@ public class SeriesManager {
 	 * @throws URISyntaxException
 	 */
 	public static void main(String[] args) throws IOException, URISyntaxException {
-		if (args.length < 3) {
+		if (args.length < 4) {
 			System.err.println("Le nombre de paramètres n'est pas correct.");
-			System.err.println("Arguments attendus : [nom fichier téléchargé] [répertoire contenant ce fichier] [chemin complet vers le fichier de préférences]");
+			
+			System.err.println("Arguments attendus (dans l'ordre) :");
+			System.err.println("\t[chemin racine de Series Manager]");
+			System.err.println("\t[nom fichier téléchargé]");
+			System.err.println("\t[répertoire contenant ce fichier]");
+			System.err.println("\t[flag de download multiple (simple|multi)]");
+			
 			System.err.println("Arguments reçus :");
 			for (String arg : args) {
-				System.err.println("SeriesManager.main() " + arg);
+				System.err.println(arg);
 			}
 			System.exit(1);
 		}
-		SeriesManager manager = new SeriesManager(args[0], args[1], args[2]);
+		
+		SeriesManager manager = new SeriesManager(args[0], args[1], args[2], "multi".equals(args[3]));
 		if (!manager.process()) {
-			// Une erreur s'est produite. On log vers le fichier de logs par défaut
-			Path logFile = Paths.get(manager.preferences.workingDirectory, "SeriesManager.log");
+			// Une erreur irrécupérable s'est produite. On log vers le fichier de logs par défaut
+			String runPath = System.getProperty("user.dir", "");
+			Path logFile = Paths.get(runPath, "SeriesManager.log");
 			Logger.flushToFile(logFile);
 		}
 	}

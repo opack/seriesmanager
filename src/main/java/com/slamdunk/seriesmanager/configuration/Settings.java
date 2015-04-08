@@ -1,4 +1,4 @@
-package com.slamdunk.seriesmanager.preferences;
+package com.slamdunk.seriesmanager.configuration;
 
 import static com.slamdunk.seriesmanager.Logger.Levels.ERROR;
 import static com.slamdunk.seriesmanager.Logger.Levels.INFO;
@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
@@ -18,37 +17,35 @@ import net.sf.json.JSONSerializer;
 import org.apache.commons.io.IOUtils;
 
 import com.slamdunk.seriesmanager.Logger;
-public class Preferences {
+public class Settings {
+	private static final String SETTINGS_FILENAME = "conf/settings.json";
 	public static final String SHOW_VAR = "#SHOW#";
 	
-	public PropertiesPreferences properties;
+	public PropertiesSettings properties;
 	
-	public String workingDirectory;
-	
-	public LogPreferences logs;
-	public BetaSeriesPreferences betaseries;
-	public MappingPreferences mapping;
+	public LogSettings logs;
+	public BetaSeriesSettings betaseries;
+	public MappingSettings mapping;
 	
 	/**
 	 * Lit les mappings et les infos BetaSeries.
 	 * @return true si le fichier a pu être chargé et qu'un mapping a été trouvé pour la série indiquée
 	 */
-	public boolean load(String file, String showTitle) {
+	public boolean load(String homeDirectory, String showTitle) {
+		String preferencesFile = homeDirectory + "/" + SETTINGS_FILENAME;
+		
 		InputStream is;
 		try {
-			is = new FileInputStream(file);
+			is = new FileInputStream(preferencesFile);
 	        String jsonTxt = IOUtils.toString(is);
 	        JSONObject json = (JSONObject)JSONSerializer.toJSON(jsonTxt);
 	        
-	        // Déduction du répertoire de travail
-	        workingDirectory = Paths.get(file).getParent().toString();
-	        
 	        // Récupération des propriétés
-	        properties = new PropertiesPreferences();
+	        properties = new PropertiesSettings();
 	        properties.load(json);
 	        
 	        // Récupération des préférences de log
-	        logs = new LogPreferences();
+	        logs = new LogSettings();
 	        logs.load(json, properties);
 	        
 	        if (!logs.isValid()) {
@@ -57,7 +54,7 @@ public class Preferences {
 	        }
 	        
 	        // Récupération des infos sur l'utilisateur BetaSeries
-	        betaseries = new BetaSeriesPreferences();
+	        betaseries = new BetaSeriesSettings();
 	        betaseries.load(json);
 	        if (!betaseries.isValid()) {
 	        	Logger.add(ERROR, "Les informations relatives à BetaSeries sont incomplètes. Le traitement ne pourra pas se poursuivre.");
@@ -65,7 +62,7 @@ public class Preferences {
 	        }
 	        
 	        // Récupération du mapping par défaut
-	        MappingPreferences defaultMapping = new MappingPreferences();
+	        MappingSettings defaultMapping = new MappingSettings();
 	        if (json.has("default-mapping")) {
 		        defaultMapping.load(json.getJSONObject("default-mapping"), properties);
 	        }
@@ -77,7 +74,7 @@ public class Preferences {
 	        JSONArray mappingsPrefs = json.getJSONArray("mappings");
 	        final int nbMappings = mappingsPrefs.size();
 	        
-	        MappingPreferences loadedMapping = new MappingPreferences();
+	        MappingSettings loadedMapping = new MappingSettings();
 	        
 	        for (int curMapping = 0; curMapping < nbMappings; curMapping++) {
 	        	JSONObject jsonMapping = mappingsPrefs.getJSONObject(curMapping);
@@ -107,7 +104,7 @@ public class Preferences {
 		} catch (JSONException e) {
 			Logger.add(ERROR, "Un problème a été rencontré dans le fichier de préférences : " + e.getMessage());
 		} catch (FileNotFoundException e) {
-			Logger.add(ERROR, "Le fichier de préférences " + file + " n'a pas été trouvé.");
+			Logger.add(ERROR, "Le fichier de préférences " + preferencesFile + " n'a pas été trouvé.");
 		} catch (IOException e) {
 			Logger.add(ERROR, "Erreur lors de la lecture du fichier de préférences (" + e.getMessage() + ").");
 		}

@@ -1,12 +1,12 @@
-package com.slamdunk.seriesmanager.preferences;
+package com.slamdunk.seriesmanager.configuration;
 
 import net.sf.json.JSONObject;
 
-public class LogPreferences {
+public class LogSettings {
 	public boolean enabled;
 	public String directory;
 	
-	public void load(JSONObject json, PropertiesPreferences properties) {
+	public void load(JSONObject json, PropertiesSettings properties) {
 		if (json.has("logs")) {
 			JSONObject logs = json.getJSONObject("logs");
 			
@@ -22,7 +22,7 @@ public class LogPreferences {
 		applyDefaults(properties);
 	}
 	
-	private void applyDefaults(PropertiesPreferences properties) {
+	private void applyDefaults(PropertiesSettings properties) {
 		if (directory == null) {
         	directory = "";
         } else {

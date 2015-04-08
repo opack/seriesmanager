@@ -1,4 +1,4 @@
-package com.slamdunk.seriesmanager.preferences;
+package com.slamdunk.seriesmanager.configuration;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.Map;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-public class PropertiesPreferences {
+public class PropertiesSettings {
 	public Map<String, String> properties;
 
 	public void load(JSONObject json) {

@@ -1,8 +1,8 @@
-package com.slamdunk.seriesmanager.preferences;
+package com.slamdunk.seriesmanager.configuration;
 
 import net.sf.json.JSONObject;
 
-public class BetaSeriesPreferences {
+public class BetaSeriesSettings {
 	public String login;
 	public String password;
 	

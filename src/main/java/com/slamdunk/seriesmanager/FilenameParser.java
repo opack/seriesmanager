@@ -2,7 +2,10 @@ package com.slamdunk.seriesmanager;
 
 import static com.slamdunk.seriesmanager.Logger.Levels.ERROR;
 import static com.slamdunk.seriesmanager.Logger.Levels.INFO;
+import static com.slamdunk.seriesmanager.Logger.Levels.WARN;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,5 +54,37 @@ public class FilenameParser {
 		Logger.add(INFO, "\t\tEpisode : " + episode);
 		
 		return true;
+	}
+
+	/**
+	 * Retourne le nom du fichier vidéo contenu dans le répertoire indiqué
+	 * @param directory
+	 * @return
+	 */
+	public static String locateVideoFile(String directory) {
+		File dir = new File(directory);
+		
+		// Récupère les noms des fichiers vidéo
+		String[] videos = dir.list(new FilenameFilter() {
+			
+			@Override
+			public boolean accept(File dir, String name) {
+					// Vérifie l'extension
+				return (name.endsWith(".mp4") || name.endsWith(".avi"))
+					// Evite les fichiers échantillon
+					&& !name.contains("sample");
+			}
+		});
+		
+		// Retourne le premier fichier qui correspond
+		if (videos != null
+		&& videos.length > 0) {
+			Logger.add(INFO, "Utilisation du fichier vidéo : " + videos[0]);
+			return videos[0];
+		}
+		
+		// On n'a rien trouvé
+		Logger.add(WARN, "Aucun fichier vidéo n'a été trouvé dans le répertoire.");
+		return null;
 	}
 }
