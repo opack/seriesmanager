@@ -1,0 +1,13 @@
+INFO : ----------------------------------------------------------------------------
+INFO : 08/04/2015 - 03:29:49
+INFO : ParamÃ¨tres reÃ§us :
+INFO : 		SeriesManager Home : C:/Users/Didier/SeriesManager
+INFO : 		Fichier            : Sample\the.flash.2014.113.hdtv-lol.sample.mp4
+INFO : 		RÃ©pertoire         : C:\Users\Didier\Downloads\Séries\The.Flash.2014.S01E13.HDTV.x264-LOL[ettv]
+INFO : 		Multi-fichiers     : true
+INFO : Utilisation du fichier vidÃ©o : the.flash.2014.113.hdtv-lol.mp4
+INFO : Informations extraites :
+INFO : 		Titre   : the flash 2014
+INFO : 		Saison  : 1
+INFO : 		Episode : 13
+ERROR : Le fichier de configuration C:/Users/Didier/SeriesManager/conf/settings.json n'a pas été trouvé.

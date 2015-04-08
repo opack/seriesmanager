@@ -5,7 +5,7 @@
 
 	<groupId>com.slamdunk.seriesmanager</groupId>
 	<artifactId>SeriesManager</artifactId>
-	<version>2.3-SNAPSHOT</version>
+	<version>2.2.1</version>
 
 	<dependencies>
 		<dependency>

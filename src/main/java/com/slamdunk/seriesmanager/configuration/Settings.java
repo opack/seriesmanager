@@ -32,11 +32,11 @@ public class Settings {
 	 * @return true si le fichier a pu être chargé et qu'un mapping a été trouvé pour la série indiquée
 	 */
 	public boolean load(String homeDirectory, String showTitle) {
-		String preferencesFile = homeDirectory + "/" + SETTINGS_FILENAME;
+		String settingsFile = homeDirectory + "/" + SETTINGS_FILENAME;
 		
 		InputStream is;
 		try {
-			is = new FileInputStream(preferencesFile);
+			is = new FileInputStream(settingsFile);
 	        String jsonTxt = IOUtils.toString(is);
 	        JSONObject json = (JSONObject)JSONSerializer.toJSON(jsonTxt);
 	        
@@ -101,13 +101,15 @@ public class Settings {
 	        	Logger.add(INFO, "Aucun mapping n'a été trouvé pour le show " + showTitle + ".");
 	        	return false;
 	        }
+	        
+	        return true;
 		} catch (JSONException e) {
 			Logger.add(ERROR, "Un problème a été rencontré dans le fichier de préférences : " + e.getMessage());
 		} catch (FileNotFoundException e) {
-			Logger.add(ERROR, "Le fichier de préférences " + preferencesFile + " n'a pas été trouvé.");
+			Logger.add(ERROR, "Le fichier de configuration " + settingsFile + " n'a pas été trouvé.");
 		} catch (IOException e) {
 			Logger.add(ERROR, "Erreur lors de la lecture du fichier de préférences (" + e.getMessage() + ").");
 		}
-		return true;
+		return false;
 	}
 }

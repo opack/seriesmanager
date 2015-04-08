@@ -159,8 +159,7 @@ public class SeriesManager {
 		SeriesManager manager = new SeriesManager(args[0], args[1], args[2], "multi".equals(args[3]));
 		if (!manager.process()) {
 			// Une erreur irrécupérable s'est produite. On log vers le fichier de logs par défaut
-			String runPath = System.getProperty("user.dir", "");
-			Path logFile = Paths.get(runPath, "SeriesManager.log");
+			Path logFile = Paths.get(args[0], "SeriesManager.log");
 			Logger.flushToFile(logFile);
 		}
 	}
