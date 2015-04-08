@@ -12,24 +12,16 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.slamdunk.seriesmanager.preferences.Preferences;
 public class SeriesManager {
-	private static final Pattern SERIES_TITLE_PATTERN_1 = Pattern.compile("(.*)\\.S(\\d?\\d)E(\\d\\d).*", Pattern.CASE_INSENSITIVE);
-	private static final Pattern SERIES_TITLE_PATTERN_2 = Pattern.compile("(.*)\\.(\\d?\\d)(\\d\\d).*", Pattern.CASE_INSENSITIVE);
-
 	private final String sourceFilename;
 	private final String sourceDirectory;
-	
-	private final String title;
-	private final int season;
-	private final int episode;
+	private final String preferencesFile;
 	
 	private Preferences preferences;
 	
-	public SeriesManager(String filename, String directory, String preferencesFile) {
+	public SeriesManager(String filename, String directory, String preferences) {
 		Logger.add(INFO, "----------------------------------------------------------------------------");
 		Logger.add(INFO, new SimpleDateFormat("dd/MM/yyyy - hh:mm:ss").format(new Date()));
 		Logger.add(INFO, "Paramètres reçus :");
@@ -39,71 +31,36 @@ public class SeriesManager {
 		// Récupération des paramètres
 		sourceFilename = filename;
 		sourceDirectory = directory;
-		
-		// Vérifie le format du nom de fichier
-		boolean filenameMatched = true;
-		Matcher m = SERIES_TITLE_PATTERN_1.matcher(sourceFilename);
-		if (!m.matches()) {
-			m = SERIES_TITLE_PATTERN_2.matcher(sourceFilename);
-			if (!m.matches()) {
-				filenameMatched = false;
-			}
-		}
-		
-		// Extraction du nom de la série et du numéro de l'épisode
-		if (filenameMatched) {
-			title = m.group(1).replaceAll("\\.", " ");
-			season = Integer.parseInt(m.group(2));
-			episode = Integer.parseInt(m.group(3));
-			
-			// Lecture des préférences
-			preferences = new Preferences();
-			preferences.load(preferencesFile, title);
-		} else {
-			Logger.add(ERROR, "Le nom de fichier " + sourceFilename + " ne correspond pas au format attendu.");
-			title = "";
-			season = 0;
-			episode = 0;
-		}
-		
-		Logger.add(INFO, "Informations extraites :");
-		Logger.add(INFO, "\t\tTitre   : " + title);
-		Logger.add(INFO, "\t\tSaison  : " + season);
-		Logger.add(INFO, "\t\tEpisode : " + episode);
+		preferencesFile = preferences;
 	}
 	
-	public void process() {
-		// Si le titre n'est pas correct, c'est qu'on n'est probablement
-		// pas en présence d'une série.
-		if (title.isEmpty()) {
-			return;
+	public boolean process() {
+		// Extrait les infos sur la série à partir du nom du fichier à traiter
+		FilenameParser parser = new FilenameParser();
+		if (!parser.parse(sourceFilename)) {
+			return false;
 		}
 		
+		// Lecture des préférences générales et de celles pour ce show
+		preferences = new Preferences();
+		if (!preferences.load(preferencesFile, parser.title)) {
+			return false;
+		}
+		
+		// Copie du fichier vers la/les destinations adéquates
 		if (!preferences.mapping.copyDestinations.isEmpty()) {
-			// Copie du fichier vers la/les destinations adéquates
 			try {
 				performCopy(preferences.mapping.copyDestinations);
 			} catch (IOException e) {
-				Logger.add(ERROR, "Erreur lors de la copie du fichier vers les destination : " + e.getMessage());
+				Logger.add(ERROR, "Erreur lors de la copie : " + e.getClass().getSimpleName() + " - " + e.getMessage());
 			}
+		}
 			
-			// Mise à jour de BetaSeries
-			boolean updateBetaSeries = true;
-			if (preferences.betaseries.markAsDownloaded) {
-				if (preferences.betaseries.login == null || preferences.betaseries.password == null) {
-					Logger.add(WARN, "Mise à jour de BetaSeries impossible car le nom ou le mot de passe n'est pas renseigné.");
-					updateBetaSeries = false;
-				}
-			} else {
-				Logger.add(INFO, "La série ne sera pas marquée comme téléchargée dans BetaSeries conformément aux préférences.");
-				updateBetaSeries = false;
-			}
-			if (updateBetaSeries) {
-				boolean result = markAsDownloaded(preferences.betaseries.login, preferences.betaseries.password, preferences.mapping.betaseriesShowId, title, season, episode); 
-				Logger.add(INFO, "Mise à jour de BetaSeries :");
-				Logger.add(INFO, "\t\tId du show trouvé dans le mapping : " + preferences.mapping.betaseriesShowId);
-				Logger.add(INFO, "\t\tRésultat de l'opération : " + result);
-			}
+		// Mise à jour de BetaSeries
+		if (preferences.betaseries.markAsDownloaded) {
+			markAsDownloaded(preferences.betaseries.login, preferences.betaseries.password, preferences.mapping.betaseriesShowId, parser.title, parser.season, parser.episode); 
+		} else {
+			Logger.add(INFO, "La série ne sera pas marquée comme téléchargée dans BetaSeries conformément aux préférences.");
 		}
 		
 		// Si les logs sont activées, on les écrit
@@ -111,9 +68,10 @@ public class SeriesManager {
 			Path logFile = Paths.get(preferences.workingDirectory, preferences.logs.directory + preferences.mapping.showName + ".log");
 			Logger.flushToFile(logFile);
 		}
+		return true;
 	}
 
-	private boolean markAsDownloaded(String betaseriesLogin, String betaseriesPassword, String showId, String showTitle, int season, int episode) {
+	private void markAsDownloaded(String betaseriesLogin, String betaseriesPassword, String showId, String showTitle, int season, int episode) {
 		// Connexion à l'API de BetaSeries
 		BetaSeriesApi betaSeries = new BetaSeriesApi();
 		betaSeries.auth(betaseriesLogin, betaseriesPassword);
@@ -125,7 +83,11 @@ public class SeriesManager {
 		String episodeId = betaSeries.getEpisodeId(showId, season, episode);
 		
 		// Marquage de l'épisode comme téléchargé
-		return betaSeries.setEpisodeDownloaded(episodeId, true);
+		boolean result = betaSeries.setEpisodeDownloaded(episodeId, true);
+		
+		Logger.add(INFO, "Mise à jour de BetaSeries :");
+		Logger.add(INFO, "\t\tId du show trouvé dans le mapping : " + preferences.mapping.betaseriesShowId);
+		Logger.add(INFO, "\t\tRésultat de l'opération : " + result);
 	}
 
 	/**
@@ -175,6 +137,10 @@ public class SeriesManager {
 			System.exit(1);
 		}
 		SeriesManager manager = new SeriesManager(args[0], args[1], args[2]);
-		manager.process();
+		if (!manager.process()) {
+			// Une erreur s'est produite. On log vers le fichier de logs par défaut
+			Path logFile = Paths.get(manager.preferences.workingDirectory, "SeriesManager.log");
+			Logger.flushToFile(logFile);
+		}
 	}
 }
