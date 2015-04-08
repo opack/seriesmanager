@@ -30,7 +30,7 @@ public class Logger {
 			Files.write(
 				file,
 				LOGS,
-				Charset.defaultCharset(),
+				Charset.forName("UTF-8"),
 				StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 			
 			// Vide les logs

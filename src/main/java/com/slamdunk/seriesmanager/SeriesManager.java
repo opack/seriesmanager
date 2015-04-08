@@ -24,7 +24,7 @@ public class SeriesManager {
 	
 	public SeriesManager(String home, String filename, String directory, boolean multi) {
 		Logger.add(INFO, "----------------------------------------------------------------------------");
-		Logger.add(INFO, new SimpleDateFormat("dd/MM/yyyy - hh:mm:ss").format(new Date()));
+		Logger.add(INFO, new SimpleDateFormat("dd/MM/yyyy - HH:mm:ss").format(new Date()));
 		Logger.add(INFO, "Paramètres reçus :");
 		Logger.add(INFO, "\t\tSeriesManager Home : " + home);
 		Logger.add(INFO, "\t\tFichier            : " + filename);

@@ -37,7 +37,7 @@ public class Settings {
 		InputStream is;
 		try {
 			is = new FileInputStream(settingsFile);
-	        String jsonTxt = IOUtils.toString(is);
+	        String jsonTxt = IOUtils.toString(is, "UTF-8");
 	        JSONObject json = (JSONObject)JSONSerializer.toJSON(jsonTxt);
 	        
 	        // Récupération des propriétés
