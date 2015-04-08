@@ -7,4 +7,4 @@ set DIRECTORY=%DIRECTORY:\"="%
 
 rem Lancement du programme
 cd /d %SERIES_MANAGER_HOME%
-"%JAVA_HOME%\bin\java.exe" -jar SeriesManager-1.1-SNAPSHOT.jar %1 %DIRECTORY% preferences.json >> SeriesManager.log
+"%JAVA_HOME%\bin\java.exe" -jar SeriesManager.jar %1 %DIRECTORY% preferences.json >> SeriesManager.log

@@ -1,0 +1,40 @@
+{
+	"properties": [ <OPTIONAL - PROPS THAT CAN BE USED INSIDE THIS FILE. FOR THE MOMENT, JUST FOR copy-to FIELD>
+		{
+			"key": "PROP_NAME",
+			"value": "<A STRING VALUE (can contain #SHOW#)>"
+		}
+	],
+	"logs": {
+		"enabled":"true",
+		"directory":"logs"
+	},
+	"betaseries": {
+		"login": "<YOUR BETASERIES LOGIN>",
+		"md5-password": "<YOUR BETASERIES PASSWORD HASHED>",
+		"markAsDownloaded": "true"
+	},
+	"default-mapping": {
+	<MAPPING VALUES APPLICABLE IF NOT OVERRIDEN>
+		"title-includes": "<MANDATORY - A STRING TO SEARCH IN TITLE (can be #SHOW#)>",
+		"title-excludes": "<OPTIONAL - A STRING TO SEARCH IN TITLE>",
+		"copy-to": [
+			"<OPTIONAL - A DIRECTORY WHERE TO COPY THE FILE>,
+			"<OPTIONAL - ANOTHER DIRECTORY WHERE TO COPY THE FILE>",
+			"<OPTIONAL - YET ANOTHER DIRECTORY WHICH WILL HAVE A SUBDIR NAMED AFTER THE TITLE>/#TITLE#",
+		]
+	},
+	"mappings": [
+		{
+			"show": "<MANDATORY - NAME OF THE SHOW FOR DISPLAY PURPOSE ONLY>",
+			"betaseries-id": "<OPTIONAL - The betaseries show id. If omitted, id will be retrieved from title>",
+			"title-includes": "<MANDATORY - A STRING TO SEARCH IN TITLE (can be #SHOW#)>",
+			"title-excludes": "<OPTIONAL - A STRING TO SEARCH IN TITLE>",
+			"copy-to": [
+				"<OPTIONAL - A DIRECTORY WHERE TO COPY THE FILE>,
+				"<OPTIONAL - ANOTHER DIRECTORY WHICH WILL HAVE A SUBDIR NAMED AFTER THE TITLE>/#TITLE#",
+				"%PROP_NAME%"
+			]
+		}
+	]
+}

@@ -9,10 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Logger {
-	private static final List<String> LOGS = new ArrayList<String>();;
+	private static final List<String> LOGS = new ArrayList<String>();
 	
-	public static void add(String message) {
-		LOGS.add(message);
+	public enum Levels {
+		INFO,
+		WARN,
+		ERROR;
+	}
+	
+	public static void add(Levels level, String message) {
+		LOGS.add(level.name() + " : " + message);
 	}
 	
 	public static void flushToFile(Path file) {

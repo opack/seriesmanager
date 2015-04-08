@@ -1,0 +1,162 @@
+{
+	"properties": [
+		{
+			"key": "FREEBOX",
+			"value": "X:/Vidéos/Séries/#SHOW#",
+		},
+		{
+			"key": "PARTAGE",
+			"value": "C:/Users/Didier/Downloads/Séries/APARTAGER/#SHOW#",
+		}
+	],
+	"logs": {
+		"enabled":"true",
+		"directory":"logs"
+	},
+	"betaseries": {
+		"login": "Opack",
+		"md5-password": "b5faf6b6d45a9aa4ec610f1699190a5a",
+		"markAsDownloaded": "true"
+	},
+	"default-mapping": {
+		"title-includes": "#SHOW#",
+		"copy-to": [
+			"%FREEBOX%"
+		]
+	},
+	"mappings": [
+		{
+			"show": "Banshee",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Black Sails"
+		},
+		{
+			"show": "Castle",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Chicago Fire"
+		},
+		{
+			"show": "Falco"
+		},
+		{
+			"show": "Forever",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Gotham",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Marvels Agents of SHIELD",
+			"title-includes": "marvels agents of",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Modern Family"
+		},
+		{
+			"show": "NCIS",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Person of Interest",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Ray Donovan"
+		},
+		{
+			"show": "Scorpion",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Sequestered",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Sherlock",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Strike Back",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Switched at Birth",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "The 100",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "The Big Bang Theory"
+		},
+		{
+			"show": "The Flash",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "The Originals",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "The Vampire Diaries",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "The Walking Dead",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "True Blood",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
+			"show": "Under the Dome",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		}
+	]
+}

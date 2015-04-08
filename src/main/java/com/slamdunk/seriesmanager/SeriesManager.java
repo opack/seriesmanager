@@ -1,18 +1,24 @@
 package com.slamdunk.seriesmanager;
 
+import static com.slamdunk.seriesmanager.Logger.Levels.ERROR;
+import static com.slamdunk.seriesmanager.Logger.Levels.INFO;
+import static com.slamdunk.seriesmanager.Logger.Levels.WARN;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.slamdunk.seriesmanager.preferences.Preferences;
 public class SeriesManager {
-	private static final Pattern SERIES_TITLE_PATTERN = Pattern.compile("(.*)\\.S(\\d\\d)E(\\d\\d).*", Pattern.CASE_INSENSITIVE);
-	private static final String TITLE_VAR = "#TITLE#";
+	private static final Pattern SERIES_TITLE_PATTERN_1 = Pattern.compile("(.*)\\.S(\\d?\\d)E(\\d\\d).*", Pattern.CASE_INSENSITIVE);
+	private static final Pattern SERIES_TITLE_PATTERN_2 = Pattern.compile("(.*)\\.(\\d?\\d)(\\d\\d).*", Pattern.CASE_INSENSITIVE);
 
 	private final String sourceFilename;
 	private final String sourceDirectory;
@@ -24,31 +30,46 @@ public class SeriesManager {
 	private Preferences preferences;
 	
 	public SeriesManager(String filename, String directory, String preferencesFile) {
-		Logger.add("--------------------------------------");
-		Logger.add(new Date().toString());
-		Logger.add("filename=" + filename + ", directory=" + directory);
+		Logger.add(INFO, "----------------------------------------------------------------------------");
+		Logger.add(INFO, new SimpleDateFormat("dd/MM/yyyy - hh:mm:ss").format(new Date()));
+		Logger.add(INFO, "Paramètres reçus :");
+		Logger.add(INFO, "\t\tFichier    : " + filename);
+		Logger.add(INFO, "\t\tRépertoire : " + directory);
 		
 		// Récupération des paramètres
 		sourceFilename = filename;
 		sourceDirectory = directory;
 		
+		// Vérifie le format du nom de fichier
+		boolean filenameMatched = true;
+		Matcher m = SERIES_TITLE_PATTERN_1.matcher(sourceFilename);
+		if (!m.matches()) {
+			m = SERIES_TITLE_PATTERN_2.matcher(sourceFilename);
+			if (!m.matches()) {
+				filenameMatched = false;
+			}
+		}
+		
 		// Extraction du nom de la série et du numéro de l'épisode
-		Matcher m = SERIES_TITLE_PATTERN.matcher(sourceFilename);
-		if (m.matches()) {
+		if (filenameMatched) {
 			title = m.group(1).replaceAll("\\.", " ");
 			season = Integer.parseInt(m.group(2));
 			episode = Integer.parseInt(m.group(3));
+			
+			// Lecture des préférences
+			preferences = new Preferences();
+			preferences.load(preferencesFile, title);
 		} else {
+			Logger.add(ERROR, "Le nom de fichier " + sourceFilename + " ne correspond pas au format attendu.");
 			title = "";
 			season = 0;
 			episode = 0;
 		}
 		
-		// Lecture des préférences
-		preferences = new Preferences();
-		preferences.load(preferencesFile, title);
-		
-		Logger.add("title=" + title + ", season=" + season + ", episode=" + episode);
+		Logger.add(INFO, "Informations extraites :");
+		Logger.add(INFO, "\t\tTitre   : " + title);
+		Logger.add(INFO, "\t\tSaison  : " + season);
+		Logger.add(INFO, "\t\tEpisode : " + episode);
 	}
 	
 	public void process() {
@@ -58,34 +79,36 @@ public class SeriesManager {
 			return;
 		}
 		
-		if (!preferences.copyDestinations.isEmpty()) {
+		if (!preferences.mapping.copyDestinations.isEmpty()) {
 			// Copie du fichier vers la/les destinations adéquates
 			try {
-				performCopy(preferences.copyDestinations);
+				performCopy(preferences.mapping.copyDestinations);
 			} catch (IOException e) {
-				Logger.add("Erreur lors de la copie du fichier vers les destination : " + e.getMessage());
+				Logger.add(ERROR, "Erreur lors de la copie du fichier vers les destination : " + e.getMessage());
 			}
 			
 			// Mise à jour de BetaSeries
 			boolean updateBetaSeries = true;
-			if (preferences.betaseriesMarkAsDownloaded) {
-				if (preferences.betaseriesLogin == null || preferences.betaseriesPassword == null) {
-					Logger.add("Mise à jour de BetaSeries impossible car le nom ou le mot de passe n'est pas renseigné.");
+			if (preferences.betaseries.markAsDownloaded) {
+				if (preferences.betaseries.login == null || preferences.betaseries.password == null) {
+					Logger.add(WARN, "Mise à jour de BetaSeries impossible car le nom ou le mot de passe n'est pas renseigné.");
 					updateBetaSeries = false;
 				}
 			} else {
-				Logger.add("La série ne sera pas marquée comme téléchargée dans BetaSeries conformément aux préférences.");
+				Logger.add(INFO, "La série ne sera pas marquée comme téléchargée dans BetaSeries conformément aux préférences.");
 				updateBetaSeries = false;
 			}
 			if (updateBetaSeries) {
-				boolean result = markAsDownloaded(preferences.betaseriesLogin, preferences.betaseriesPassword, preferences.showId, title, season, episode); 
-				Logger.add("Mise à jour de BetaSeries : showId=" + preferences.showId + ", title=" + title + ", saison=" + season + ", épisode=" + episode + ", résultat=" + result);
+				boolean result = markAsDownloaded(preferences.betaseries.login, preferences.betaseries.password, preferences.mapping.betaseriesShowId, title, season, episode); 
+				Logger.add(INFO, "Mise à jour de BetaSeries :");
+				Logger.add(INFO, "\t\tId du show trouvé dans le mapping : " + preferences.mapping.betaseriesShowId);
+				Logger.add(INFO, "\t\tRésultat de l'opération : " + result);
 			}
 		}
 		
 		// Si les logs sont activées, on les écrit
-		if (preferences.isLogEnabled) {
-			Path logFile = Paths.get(preferences.workingDirectory, preferences.logDir + title + ".log");
+		if (preferences.logs.enabled) {
+			Path logFile = Paths.get(preferences.workingDirectory, preferences.logs.directory + preferences.mapping.showName + ".log");
 			Logger.flushToFile(logFile);
 		}
 	}
@@ -113,19 +136,22 @@ public class SeriesManager {
 	 */
 	private void performCopy(List<String> destinations) throws IOException {
 		Path source = Paths.get(sourceDirectory, sourceFilename);
+		Logger.add(INFO, "Copies ");
 		for (String destination : destinations) {
 			// Remplacement des variables
-			String extendedDestination = destination.replaceAll(TITLE_VAR, title);
+			String extendedDestination = destination.replaceAll(Preferences.SHOW_VAR, preferences.mapping.showName);
 			
+			// Détermine le répertoire de destination
 			Path destinationFile = Paths.get(extendedDestination, sourceFilename);
 			
+			// Copie du fichier
 			if (Files.notExists(destinationFile)) {
 				Files.createDirectories(Paths.get(extendedDestination));
 				
-				Logger.add("Copie vers " + destinationFile);
 				Files.copy(source, destinationFile);
+				Logger.add(INFO, "\t\tCopie effectuée vers " + extendedDestination);
 			} else {
-				Logger.add("Le fichier " + destinationFile + " existe déjà.");
+				Logger.add(WARN, "\t\tCopie annulée vers " + extendedDestination + " car le fichier existe déjà");
 			}
 		}
 	}

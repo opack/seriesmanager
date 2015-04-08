@@ -1,5 +1,7 @@
 package com.slamdunk.seriesmanager;
 
+import static com.slamdunk.seriesmanager.Logger.Levels.ERROR;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
@@ -83,7 +85,7 @@ public class BetaSeriesApi {
 				"title", URLEncoder.encode(title, "UTF-8"),
 				"summary", "true");
 		} catch (UnsupportedEncodingException e) {
-			Logger.add("Impossible de récupérer l'id du show " + title + " car l'encodage UTF-8 n'est pas supporté. " + e.getMessage());
+			Logger.add(ERROR, "Impossible de récupérer l'id du show " + title + " car l'encodage UTF-8 n'est pas supporté. " + e.getMessage());
 			return "";
 		}
 		
@@ -152,17 +154,5 @@ public class BetaSeriesApi {
 		JSONObject episode = json.getJSONObject("episode");
 		JSONObject user = episode.getJSONObject("user");
 		return user.getBoolean("downloaded") == downloaded;
-	}
-	
-	public static void main(String[] args) {
-		final String login = "Opack";
-		final String password = "b5faf6b6d45a9aa4ec610f1699190a5a";
-
-		BetaSeriesApi betaSeries = new BetaSeriesApi();
-		
-		betaSeries.auth(login, password);
-		String showId = betaSeries.getShowId("banshee");
-		String episodeId = betaSeries.getEpisodeId(showId, 2, 2);
-		betaSeries.setEpisodeDownloaded(episodeId, true);
 	}
 }
