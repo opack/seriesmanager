@@ -16,54 +16,57 @@ import java.util.List;
 import com.slamdunk.seriesmanager.configuration.Settings;
 public class SeriesManager {
 	private String homeDirectory;
-	private String sourceFilename;
+	private String sourceTitle;
 	private String sourceDirectory;
-	private boolean multiFilesDownload;
 	
 	private Settings preferences;
 	
-	public SeriesManager(String home, String filename, String directory, boolean multi) {
+	public SeriesManager(String home, String directory, String title) {
 		Logger.add(INFO, "----------------------------------------------------------------------------");
 		Logger.add(INFO, new SimpleDateFormat("dd/MM/yyyy - HH:mm:ss").format(new Date()));
 		Logger.add(INFO, "Paramètres reçus :");
-		Logger.add(INFO, "\t\tSeriesManager Home : " + home);
-		Logger.add(INFO, "\t\tFichier            : " + filename);
-		Logger.add(INFO, "\t\tRépertoire         : " + directory);
-		Logger.add(INFO, "\t\tMulti-fichiers     : " + multi);
+		Logger.add(INFO, "\t\tHome      : " + home);
+		Logger.add(INFO, "\t\tRépertoire : " + directory);
+		Logger.add(INFO, "\t\tTitre      : " + title);
 		
 		// Récupération des paramètres
 		homeDirectory = home;
-		sourceFilename = filename;
+		sourceTitle = title;
 		sourceDirectory = directory;
-		multiFilesDownload = multi;
 	}
 	
 	public boolean process() {
-		// Si on a un download multi-fichiers, alors on doit rechercher le nom du fichier
-		// vidéo dans le répertoire indiqué
-		if (multiFilesDownload) {
-			sourceFilename = FilenameParser.locateVideoFile(sourceDirectory);
-			if (sourceFilename == null) {
-				return false;
-			}
-		}
-		
-		// Extrait les infos sur la série à partir du nom du fichier à traiter
-		FilenameParser parser = new FilenameParser();
-		if (!parser.parse(sourceFilename)) {
+		// Extrait les infos sur la série à partir du titre du téléchargement
+		TitleParser parser = new TitleParser();
+		if (!parser.parse(sourceTitle)) {
+			Logger.add(ERROR, "Le titre de téléchargement " + sourceTitle + " ne correspond pas aux formats reconnus.");
 			return false;
 		}
 		
+		Logger.add(INFO, "Informations extraites :");
+		Logger.add(INFO, "\t\tTitre   : " + parser.show);
+		Logger.add(INFO, "\t\tSaison  : " + parser.season);
+		Logger.add(INFO, "\t\tEpisode : " + parser.episode);
+				
+		// Localise le fichier à traiter dans le répertoire indiqué
+		String filename = parser.locateVideoFile(sourceDirectory);
+		if (filename == null) {
+			Logger.add(WARN, "Aucun fichier vidéo correspondant n'a été trouvé dans le répertoire.");
+			return false;
+		}
+		
+		Logger.add(INFO, "Utilisation du fichier vidéo : " + filename);
+		
 		// Lecture des préférences générales et de celles pour ce show
 		preferences = new Settings();
-		if (!preferences.load(homeDirectory, parser.title)) {
+		if (!preferences.load(homeDirectory, parser.show)) {
 			return false;
 		}
 		
 		// Copie du fichier vers la/les destinations adéquates
 		if (!preferences.mapping.copyDestinations.isEmpty()) {
 			try {
-				performCopy(preferences.mapping.copyDestinations);
+				performCopy(filename, preferences.mapping.copyDestinations);
 			} catch (IOException e) {
 				Logger.add(ERROR, "Erreur lors de la copie : " + e.getClass().getSimpleName() + " - " + e.getMessage());
 			}
@@ -71,7 +74,7 @@ public class SeriesManager {
 			
 		// Mise à jour de BetaSeries
 		if (preferences.betaseries.markAsDownloaded) {
-			markAsDownloaded(preferences.betaseries.login, preferences.betaseries.password, preferences.mapping.betaseriesShowId, parser.title, parser.season, parser.episode); 
+			markAsDownloaded(preferences.betaseries.login, preferences.betaseries.password, preferences.mapping.betaseriesShowId, parser.show, parser.season, parser.episode); 
 		} else {
 			Logger.add(INFO, "La série ne sera pas marquée comme téléchargée dans BetaSeries conformément aux préférences.");
 		}
@@ -109,15 +112,15 @@ public class SeriesManager {
 	 * @param destinations
 	 * @throws IOException 
 	 */
-	private void performCopy(List<String> destinations) throws IOException {
-		Path source = Paths.get(sourceDirectory, sourceFilename);
+	private void performCopy(String filename, List<String> destinations) throws IOException {
+		Path source = Paths.get(sourceDirectory, filename);
 		Logger.add(INFO, "Copies ");
 		for (String destination : destinations) {
 			// Remplacement des variables
 			String extendedDestination = destination.replaceAll(Settings.SHOW_VAR, preferences.mapping.showName);
 			
 			// Détermine le répertoire de destination
-			Path destinationFile = Paths.get(extendedDestination, sourceFilename);
+			Path destinationFile = Paths.get(extendedDestination, filename);
 			
 			// Copie du fichier
 			if (Files.notExists(destinationFile)) {
@@ -140,14 +143,13 @@ public class SeriesManager {
 	 * @throws URISyntaxException
 	 */
 	public static void main(String[] args) throws IOException, URISyntaxException {
-		if (args.length < 4) {
+		if (args.length < 3) {
 			System.err.println("Le nombre de paramètres n'est pas correct.");
 			
 			System.err.println("Arguments attendus (dans l'ordre) :");
-			System.err.println("\t[chemin racine de Series Manager]");
-			System.err.println("\t[nom fichier téléchargé]");
-			System.err.println("\t[répertoire contenant ce fichier]");
-			System.err.println("\t[flag de download multiple (simple|multi)]");
+			System.err.println("\t[Chemin racine de Series Manager]");
+			System.err.println("\t[Dossiers où les fichiers sont téléchargés]");
+			System.err.println("\t[Titre du torrent]");
 			
 			System.err.println("Arguments reçus :");
 			for (String arg : args) {
@@ -156,7 +158,7 @@ public class SeriesManager {
 			System.exit(1);
 		}
 		
-		SeriesManager manager = new SeriesManager(args[0], args[1], args[2], "multi".equals(args[3]));
+		SeriesManager manager = new SeriesManager(args[0], args[1].trim(), args[2]);
 		if (!manager.process()) {
 			// Une erreur irrécupérable s'est produite. On log vers le fichier de logs par défaut
 			Path logFile = Paths.get(args[0], "SeriesManager.log");

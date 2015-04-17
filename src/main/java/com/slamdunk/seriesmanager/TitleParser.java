@@ -1,15 +1,11 @@
 package com.slamdunk.seriesmanager;
 
-import static com.slamdunk.seriesmanager.Logger.Levels.ERROR;
-import static com.slamdunk.seriesmanager.Logger.Levels.INFO;
-import static com.slamdunk.seriesmanager.Logger.Levels.WARN;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class FilenameParser {
+public class TitleParser {
 	/**
 	 * Pattern pour un fichier au format *[show_name].S[season]E[episode].*
 	 */
@@ -25,43 +21,44 @@ public class FilenameParser {
 	 */
 	private static final Pattern SERIES_TITLE_PATTERN_3 = Pattern.compile("(.*)\\.(\\d?\\d)(\\d\\d).*", Pattern.CASE_INSENSITIVE);
 	
-	public String title;
+	public String show;
 	public int season;
 	public int episode;
 	
-	public boolean parse(String filename) {
+	/**
+	 * Extrait le nom de la série, le numéro de la saison et de l'épisode
+	 * du titre de téléchargement spécifié
+	 * @param title
+	 * @return
+	 */
+	public boolean parse(String title) {
 		// Vérifie le format du nom de fichier
-		Matcher m = SERIES_TITLE_PATTERN_1.matcher(filename);
+		Matcher m = SERIES_TITLE_PATTERN_1.matcher(title);
 		if (!m.matches()) {
-			m = SERIES_TITLE_PATTERN_2.matcher(filename);
+			m = SERIES_TITLE_PATTERN_2.matcher(title);
 			if (!m.matches()) {
-				m = SERIES_TITLE_PATTERN_3.matcher(filename);
+				m = SERIES_TITLE_PATTERN_3.matcher(title);
 				if (!m.matches()) {
-					Logger.add(ERROR, "Le nom de fichier " + filename + " ne correspond pas aux formats reconnus.");
 					return false;
 				}
 			}
 		}
 		
 		// Extraction du nom de la série et du numéro de l'épisode
-		title = m.group(1).replaceAll("\\.", " ");
+		show = m.group(1).replaceAll("\\.", " ");
 		season = Integer.parseInt(m.group(2));
 		episode = Integer.parseInt(m.group(3));
-		
-		Logger.add(INFO, "Informations extraites :");
-		Logger.add(INFO, "\t\tTitre   : " + title);
-		Logger.add(INFO, "\t\tSaison  : " + season);
-		Logger.add(INFO, "\t\tEpisode : " + episode);
 		
 		return true;
 	}
 
 	/**
-	 * Retourne le nom du fichier vidéo contenu dans le répertoire indiqué
+	 * Retourne le nom du fichier vidéo correspondant au titre parsé
+	 * contenu dans le répertoire indiqué
 	 * @param directory
 	 * @return
 	 */
-	public static String locateVideoFile(String directory) {
+	public String locateVideoFile(String directory) {
 		File dir = new File(directory);
 		
 		// Récupère les noms des fichiers vidéo
@@ -72,19 +69,34 @@ public class FilenameParser {
 					// Vérifie l'extension
 				return (name.endsWith(".mp4") || name.endsWith(".avi"))
 					// Evite les fichiers échantillon
-					&& !name.contains("sample");
+					&& !name.contains("sample")
+					// Vérifie la saison et l'épisode
+					&& matchesParsedTitle(name);
 			}
 		});
 		
 		// Retourne le premier fichier qui correspond
 		if (videos != null
 		&& videos.length > 0) {
-			Logger.add(INFO, "Utilisation du fichier vidéo : " + videos[0]);
 			return videos[0];
 		}
 		
 		// On n'a rien trouvé
-		Logger.add(WARN, "Aucun fichier vidéo n'a été trouvé dans le répertoire.");
 		return null;
+	}
+	
+	/**
+	 * Indique si le nom de fichier spécifié correspond au titre parsé
+	 * (nom de série, numéro de saison et d'épisode)
+	 * @param name
+	 * @return
+	 */
+	public boolean matchesParsedTitle(String filename) {
+		TitleParser test = new TitleParser();
+		test.parse(filename);
+		
+		return test.show.equalsIgnoreCase(show)
+			&& test.season == season
+			&& test.episode == episode;
 	}
 }

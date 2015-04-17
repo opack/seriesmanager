@@ -26,6 +26,12 @@
 	},
 	"mappings": [
 		{
+			"show": "Arrow",
+			"copy-to": [
+				"%PARTAGE%"
+			]
+		},
+		{
 			"show": "Banshee",
 			"copy-to": [
 				"%PARTAGE%"
