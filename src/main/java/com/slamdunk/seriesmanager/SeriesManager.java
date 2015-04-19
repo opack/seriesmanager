@@ -57,7 +57,8 @@ public class SeriesManager {
 		
 		Logger.add(INFO, "Utilisation du fichier vidéo : " + filename);
 		
-		// Lecture des préférences générales et de celles pour ce show
+		// Lecture des préférences générales et de celles pour ce show, en vérifiant que le fichier
+		// vidéo trouvé correspond bien aux filtres à valider pour ce show.
 		preferences = new Settings();
 		if (!preferences.load(homeDirectory, parser.show)) {
 			return false;
