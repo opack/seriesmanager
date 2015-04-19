@@ -12,7 +12,7 @@ Pour lancer SeriesManager, exécuter la commande suivante :
 java -jar SeriesManager.jar %SERIES_MANAGER_HOME% %DOWNLOAD_DIR% %TORRENT_TITLE%
 ```
 où :
-* SERIES_MANAGER_HOME : répertoire "maison" de l'application. C'est là que seront stockées les logs et que sera recherché le fichier de configuration (dans conf/settings.json).
+* '''SERIES_MANAGER_HOME''' : répertoire "maison" de l'application. C'est là que seront stockées les logs et que sera recherché le fichier de configuration (dans conf/settings.json).
 * DOWNLOAD_DIR : répertoire dans lequel a été téléchargé le fichier
 * TORRENT_TITLE : nom du torrent, duquel sera extrait le nom de la série, le numéro de la saison et de l'épisode.
 
